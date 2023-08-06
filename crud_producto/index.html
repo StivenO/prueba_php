@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <link rel="shortcut icon" href="../img/icono_stiven.jpg" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <h1>Lista de Productos</h1>
+    <input type="button" value="Agregar Producto" onclick="abrirModal()">
+    <hr>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre del producto</th>
+                <th>Referencia</th>
+                <th>Precio</th>
+                <th>Peso</th>
+                <th>Categoría</th>
+                <th>Stock</th>
+                <th>Fecha de creación</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="contenido_tabla">
+
+        </tbody>
+    </table>
+
+    <div class="modal" id="modal_agregar">
+        <div class="contenido_modal">
+            <h2>Agregar nuevo producto</h2>
+            <form id="formulario_agregar">
+                <label>Nombre del producto:</label>
+                <input type="text" name="nombre" required><br>
+                <label>Referencia:</label>
+                <input type="text" name="referencia" required><br>
+                <label>Precio:</label>
+                <input type="number" name="precio" required min="0" required><br>
+                <label>Peso:</label>
+                <input type="number" name="peso" required min="0" required><br>
+                <label>Categoría:</label>
+                <input type="text" name="categoria" required><br>
+                <label>Stock:</label>
+                <input type="number" name="stock" required min="0" required><br>
+                <input type="button" value="Agregar producto" onclick="agregarProducto()">
+                <input type="button" value="Cancelar" onclick="cerrarModal()">
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="modal_editar">
+        <div class="contenido_modal">
+            <h2>Editar producto</h2>
+            <form id="formulario_editar">
+                <input type="hidden" name="id" id="edit_id">
+                <label>Nombre del producto:</label>
+                <input type="text" name="nombre" id="edit_nombre" required><br>
+                <label>Referencia:</label>
+                <input type="text" name="referencia" id="edit_referencia" required><br>
+                <label>Precio:</label>
+                <input type="number" name="precio" id="edit_precio" required min="0" required><br>
+                <label>Peso:</label>
+                <input type="number" name="peso" id="edit_peso" required min="0" required><br>
+                <label>Categoría:</label>
+                <input type="text" name="categoria" id="edit_categoria" required><br>
+                <label>Stock:</label>
+                <input type="number" name="stock" id="edit_stock" required min="0" required><br>
+                <input type="button" value="Guardar cambios" onclick="guardarCambios()">
+                <input type="button" value="Cancelar" onclick="cerrarModalEditar()">
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function mostrarProductos() {
+            const tablaBody = $("#contenido_tabla");
+            // Realizar una petición AJAX para obtener los productos
+            $.ajax({
+                url: "app.php?action=obtenerProductos",
+                method: "GET",
+                dataType: "json",
+                success: function (productosList) {
+                    // Limpiar la tabla antes de agregar los nuevos productos
+                    tablaBody.empty();
+                    if (productosList.length > 0) {
+                        // Iterar sobre los productos y agregarlos a la tabla
+                        productosList.forEach(function (producto) {
+                            const tr = $("<tr>");
+                            tr.html(`<td>${producto.ID}</td>
+                        <td>${producto.Nombre}</td>
+                        <td>${producto.Referencia}</td>
+                        <td>${producto.Precio}</td>
+                        <td>${producto.Peso}</td>
+                        <td>${producto.Categoria}</td>
+                        <td>${producto.Stock}</td>
+                        <td>${producto.FechaCreacion}</td>
+                        <td><button class="btn_editar" onclick="abrirModalEditar(${producto.ID})">Editar</button><button class="btn_eliminar" onclick="eliminarProducto(${producto.ID})">Eliminar</button></td>`);
+                            tablaBody.append(tr);
+                        });
+                    } else {
+                        const tr = $("<tr>");
+                        tr.html("<td colspan='9'>No se encontraron productos.</td>");
+                        tablaBody.append(tr);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // Manejar el error en caso de que ocurra
+                    console.error("Error en la petición AJAX:", error);
+                }
+            });
+        }
+
+        function agregarProducto() {
+            // Obtener los datos del formulario
+            const form = $("#formulario_agregar");
+            const formData = form.serializeArray();
+
+            // Convertir formData en un objeto JavaScript
+            const dataObject = {};
+            formData.forEach(item => {
+                dataObject[item.name] = item.value;
+            });
+
+            if (dataObject['precio'] < 0 || dataObject['peso'] < 0 || (dataObject['stock']) < 0) {
+                alert("El precio, la cantidad y el peso no pueden ser menores a 0.");
+                return;
+            }
+            // Agregar la propiedad 'action' al objeto
+            dataObject['action'] = 'agregar';
+
+            // Realizar una petición AJAX para agregar el producto
+            $.ajax({
+                url: "app.php",
+                method: "POST",
+                data: dataObject,
+                success: function (response) {
+                    console.log(response);
+                    // Si la inserción fue exitosa, cerrar el modal y actualizar la tabla
+                    if (response === '1') {
+                        cerrarModal();
+                        mostrarProductos();
+                    } else {
+                        alert("Error al agregar el producto.");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // Manejar el error en caso de que ocurra
+                    console.error("Error en la petición AJAX:", error);
+                }
+            });
+        }
+
+        function eliminarProducto(id) {
+            // Mostrar el cuadro de confirmación
+            const confirmar = confirm("¿Estás seguro de que deseas eliminar este producto?");
+
+            if (confirmar) {
+                // Realizar una petición AJAX para eliminar el producto
+                $.ajax({
+                    url: "app.php?action=eliminar&id=" + id,
+                    method: "GET",
+                    success: function (response) {
+                        // Si la eliminación fue exitosa, actualizar la tabla para reflejar los cambios
+                        if (response === "1") {
+                            mostrarProductos();
+                        } else {
+                            alert("Error al eliminar el producto.");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        // Manejar el error en caso de que ocurra
+                        console.error("Error en la petición AJAX:", error);
+                    }
+                });
+            }
+        }
+
+        let editProductID;
+
+        function abrirModalEditar(id) {
+            // Guardar el ID del producto a editar en la variable global
+            editProductID = id;
+
+            // Obtener los datos del producto a editar mediante una petición AJAX
+            $.ajax({
+                url: "app.php?action=obtenerProducto&id=" + id,
+                method: "GET",
+                dataType: "json",
+                success: function (producto) {
+                    // Rellenar los campos del formulario con los datos del producto
+                    $("#edit_id").val(producto.ID);
+                    $("#edit_nombre").val(producto.Nombre);
+                    $("#edit_referencia").val(producto.Referencia);
+                    $("#edit_precio").val(producto.Precio);
+                    $("#edit_peso").val(producto.Peso);
+                    $("#edit_categoria").val(producto.Categoria);
+                    $("#edit_stock").val(producto.Stock);
+
+                    // Mostrar el modal de edición
+                    $("#modal_editar").css("display", "block");
+                },
+                error: function (xhr, status, error) {
+                    // Manejar el error en caso de que ocurra
+                    console.error("Error en la petición AJAX:", error);
+                }
+            });
+        }
+
+        function guardarCambios() {
+            // Obtener los datos del formulario de edición
+            const form = $("#formulario_editar");
+            const formData = form.serializeArray();
+
+            // Convertir formData en un objeto JavaScript
+            const dataObject = {};
+            formData.forEach(item => {
+                dataObject[item.name] = item.value;
+            });
+            if (dataObject['precio'] < 0 || dataObject['peso'] < 0 || (dataObject['stock']) < 0) {
+                alert("El precio, la cantidad y el peso no pueden ser menores a 0.");
+                return;
+            }
+
+            // Agregar la propiedad 'action' al objeto
+            dataObject['action'] = 'actualizar';
+            dataObject['id'] = editProductID; // Utilizar el ID del producto guardado en la variable global editProductID
+
+            // Realizar una petición AJAX para actualizar el producto
+            $.ajax({
+                url: "app.php",
+                method: "POST",
+                data: dataObject,
+                success: function (response) {
+                    console.log(response);
+                    // Si la actualización fue exitosa, cerrar el modal de edición y actualizar la tabla
+                    if (response === 'success') {
+                        cerrarModalEditar();
+                        mostrarProductos();
+                    } else {
+                        alert("Error al guardar los cambios.");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // Manejar el error en caso de que ocurra
+                    console.error("Error en la petición AJAX:", error);
+                }
+            });
+        }
+
+        function cerrarModalEditar() {
+            $("#modal_editar").css("display", "none");
+        }
+
+        function abrirModal() {
+            document.getElementById("modal_agregar").style.display = "block";
+        }
+
+        function cerrarModal() {
+            document.getElementById("modal_agregar").style.display = "none";
+        }
+
+        // Mostrar los productos al cargar la página
+        mostrarProductos();
+    </script>
+</body>
+
+</html>

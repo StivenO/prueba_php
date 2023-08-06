@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <link rel="shortcut icon" href="../img/icono_stiven.jpg" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo de Ventas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Módulo de Ventas</h1>
+    <div class="ventas-container">
+        <div class="productos-disponibles">
+            <h2>Productos disponibles</h2>
+            <table id="tabla_productos_disponibles">
+                <thead>
+                    <tr>
+                        <th>Nombre del producto</th>
+                        <th>Referencia</th>
+                        <th>Precio</th>
+                        <th>Peso</th>
+                        <th>Categoría</th>
+                        <th>Stock</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="contenido_tabla">
+
+                </tbody>
+            </table>
+        </div>
+        <div class="productos-a-comprar">
+            <h2>Productos a comprar</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre del producto</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla_productos_compra">
+                </tbody>
+            </table>
+            <div class="total">
+                Total: <span id="total_venta">$0.00</span>
+            </div>
+            <button class="btn-comprar" onclick="realizarCompra()">Realizar Compra</button>
+        </div>
+    </div>
+
+    <!-- Modal para agregar productos a comprar -->
+    <div class="modal" id="modal_agregar_cantidad">
+        <h2>Agregar Cantidad De <span id="nombre_producto"> </span></h2>
+        <form id="formulario_agregar_cantidad">
+            <input type="hidden" name="id" id="producto_id">
+            <label>Cantidad:</label>
+            <input type="number" name="cantidad" id="cantidad_producto" required min="1" value="1"><br>
+            <div id="error_cantidad">
+                La cantidad no puede ser mayor al stock disponible.
+            </div>
+            <input type="button" value="Agregar" onclick="agregarProductoACompra()">
+            <input type="button" value="Cancelar" onclick="cerrarModalAgregarCantidad()">
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Variable global para almacenar la lista de productos a comprar
+        let productosAComprar = [];
+        function mostrarProductosDisponibles() {
+            const tablaBody = $("#contenido_tabla");
+            // Realizar una petición AJAX para obtener los productos
+            $.ajax({
+                url: "app.php?action=obtenerProductosDisponibles",
+                method: "GET",
+                dataType: "json",
+                success: function (productosList) {
+                    // Limpiar la tabla antes de agregar los nuevos productos
+                    tablaBody.empty();
+                    if (productosList.length > 0) {
+                        // Iterar sobre los productos y agregarlos a la tabla
+                        productosList.forEach(function (producto) {
+                            const tr = $("<tr>");
+                            tr.html(`
+                        <td>${producto.Nombre}</td>
+                        <td>${producto.Referencia}</td>
+                        <td>${producto.Precio}</td>
+                        <td>${producto.Peso}</td>
+                        <td>${producto.Categoria}</td>
+                        <td>${producto.Stock}</td>
+                        <td><button class="btn_agregar" onclick="abrirModalAgregarCantidad('${producto.ID}','${producto.Nombre}',${producto.Stock})">Agregar</button></td>`);
+                            tablaBody.append(tr);
+                        });
+                    } else {
+                        const tr = $("<tr>");
+                        tr.html("<td colspan='9'>No se encontraron productos.</td>");
+                        tablaBody.append(tr);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // Manejar el error en caso de que ocurra
+                    console.error("Error en la petición AJAX:", error);
+                }
+            });
+        }
+
+        let stockDisponible = 0;
+        function abrirModalAgregarCantidad(productoID, Nombre, Stock) {
+            $("#nombre_producto").text(Nombre);
+            stockDisponible = Stock;
+            $("#producto_id").val(productoID);
+            // Restablecer el valor del campo de cantidad a 1 cada vez que se muestre el modal
+            $("#cantidad_producto").val(1);
+            // Mostrar el modal de agregar
+            $("#modal_agregar_cantidad").css("display", "block");
+        }
+
+        function cerrarModalAgregarCantidad() {
+            // Limpiar el valor del campo cantidad antes de cerrar el modal
+            $("#cantidad_producto").val(1);
+            $("#modal_agregar_cantidad").css("display", "none");
+        }
+
+        function agregarProductoACompra() {
+            // Obtener los datos del formulario formulario_agregar_cantidad
+            const form = $("#formulario_agregar_cantidad");
+            const formData = form.serializeArray();
+
+            // Convertir formData en un objeto JavaScript
+            const dataObject = {};
+            formData.forEach(item => {
+                dataObject[item.name] = item.value;
+            });
+
+            // Verificar si la cantidad es mayor al stock disponible
+            if (parseInt(dataObject['cantidad']) > stockDisponible) {
+                // Mostrar mensaje de error y detener el proceso
+                $("#error_cantidad").css("display", "block");
+                return;
+            }
+            const dataEnviar = {};
+            dataEnviar['action'] = 'obtenerProducto';
+            dataEnviar['id'] = dataObject['id'];
+            // Realizar una petición AJAX para agregar el producto a la lista de productos a comprar
+            $.ajax({
+                url: "app.php",
+                method: "POST",
+                data: dataEnviar,
+                success: function (response) {
+                    // Si la inserción fue exitosa, cerrar el modal de agregar cantidad
+                    // y actualizar la tabla de productos a comprar
+                    if (response === 'Error') {
+                        alert("Error al agregar el producto a la lista de compra.");
+                    } else {
+                        response = JSON.parse(response);
+                        const productoAComprar = {
+                            ID: response['ID'],
+                            Nombre: response['Nombre'],
+                            Precio: response['Precio'],
+                            Cantidad: (dataObject['cantidad']), // Agregar la cantidad al objeto
+                        };
+                        // Agregar el producto a la lista de productos a comprar
+                        productosAComprar.push(productoAComprar);
+                        cerrarModalAgregarCantidad();
+                        mostrarProductosAComprar();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // Manejar el error en caso de que ocurra
+                    console.error("Error en la petición AJAX:", error);
+                }
+            });
+        }
+
+        function cerrarModalAgregar() {
+            // Ocultar el modal y limpiar el mensaje de error al cerrarlo
+            $("#modal_agregar").css("display", "none");
+            $("#error_cantidad").css("display", "none");
+        }
+
+        function mostrarProductosAComprar() {
+            const tablaBody = $("#tabla_productos_compra");
+            tablaBody.empty();
+            if (productosAComprar.length > 0) {
+                productosAComprar.forEach(function (producto) {
+                    const tr = $("<tr>");
+                    tr.html(`
+                <td>${producto.Nombre}</td>
+                <td>${producto.Precio}</td>
+                <td>${producto.Cantidad}</td>
+                <td>${producto.Precio * producto.Cantidad}</td>
+                <td><button class="btn_quitar" onclick="quitarProducto(${producto.ID})">Quitar</button></td>
+            `);
+                    tablaBody.append(tr);
+                });
+            } else {
+                const tr = $("<tr>");
+                tr.html("<td colspan='5'>No hay productos agregados.</td>");
+                tablaBody.append(tr);
+            }
+
+            // Actualizar el total de la venta
+            actualizarTotalVenta();
+        }
+
+        function actualizarTotalVenta() {
+            let totalVenta = 0;
+            productosAComprar.forEach(function (producto) {
+                totalVenta += producto.Precio * producto.Cantidad;
+            });
+            $("#total_venta").text("$" + totalVenta);
+        }
+
+        function quitarProducto(ID) {
+            // Buscar el índice del producto en el array productosAComprar
+            const index = productosAComprar.findIndex(producto => producto.ID === ID.toString());
+            console.log(productosAComprar);
+            console.log(ID);
+            if (index !== -1) {
+                // Eliminar el producto del array productosAComprar
+                productosAComprar.splice(index, 1);
+
+                // Actualizar la tabla de productos a comprar
+                mostrarProductosAComprar();
+
+                // Actualizar el total de la venta
+                actualizarTotalVenta();
+            }
+        }
+
+        function realizarCompra() {
+            if (productosAComprar.length === 0) {
+                alert("No hay productos agregados para realizar la compra.");
+                return;
+            }
+
+            const detallesCompra = productosAComprar.map(producto => {
+                return {
+                    id_producto: producto.ID,
+                    precio: producto.Precio,
+                    cantidad: producto.Cantidad
+                };
+            });
+
+            // Crear el objeto de datos que se enviará al servidor
+            const dataCompra = {
+                detalles: JSON.stringify(detallesCompra) // Convertir el objeto en una cadena JSON
+            };
+            dataCompra['action'] = 'realizarCompra';
+            console.log(dataCompra);
+            // Realizar la petición AJAX para procesar la compra
+            $.ajax({
+                url: "app.php",
+                method: "POST",
+                data: dataCompra,
+                success: function (response) {
+                    console.log(typeof(response));
+                    if (response === "true") {
+                        // La compra se realizó correctamente, limpiar la lista de productos a comprar
+                        productosAComprar = [];
+                        mostrarProductosAComprar();
+                        mostrarProductosDisponibles()
+                        alert("Compra realizada exitosamente.");
+                    } else {
+                        alert("Error al procesar la compra.");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // Manejar el error en caso de que ocurra
+                    console.error("Error en la petición AJAX:", error);
+                }
+            });
+        }
+
+        mostrarProductosDisponibles();
+    </script>
+</body>
+
+</html>

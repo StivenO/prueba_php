@@ -1,0 +1,130 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+}
+
+h1 {
+    margin: 20px;
+    text-align: center;
+    color: #007bff;
+}
+
+/* Estilos del botón */
+input[type="button"] {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 3px;
+    cursor: pointer;
+    margin: 20px;
+    float: right;
+}
+
+input[type="button"]:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos de la tabla */
+table {
+    width: 96%;
+    border-collapse: collapse;
+    text-align: left;
+    margin: 2%;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+th,
+td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+/* Estilos para modales */
+.modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.modal h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #007bff;
+}
+
+.modal label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.modal input[type="text"],
+.modal input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.modal input[type="button"] {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+/* Estilos para el botón de editar en la tabla */
+.btn_editar {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.btn_editar:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos para el botón de eliminar en la tabla */
+.btn_eliminar {
+    background-color: #ff3b3b;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.btn_eliminar:hover {
+    background-color: #e60000;
+}
+
+/* Estilos para el footer */
+footer {
+    width: 100%;
+    text-align: center;
+    background-color: #f2f2f2;
+    padding: 10px 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}

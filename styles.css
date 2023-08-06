@@ -1,0 +1,70 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+}
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline;
+    margin-right: 20px;
+}
+
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+}
+
+nav ul li a:hover {
+    text-decoration: underline;
+}
+
+main {
+    padding: 20px;
+}
+
+/* Estilos para los enlaces del menú activo */
+nav ul li a.active {
+    font-weight: bold;
+}
+
+/* Estilos para el pie de página */
+footer {
+    background-color: #333;
+    color: #fff;
+    position: absolute;
+    bottom: 0;
+    width: 100vw;
+}
+
+/* Estilos específicos para la página de productos */
+#productos {
+    background-color: #f7f7f7;
+}
+
+/* Estilos específicos para la página de ventas */
+#ventas {
+    background-color: #f0f0f0;
+}
+section{
+    padding: 1%;
+    margin: 1%;
+}
+section:hover {
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+#Autor{
+    margin-left: 1%
+}

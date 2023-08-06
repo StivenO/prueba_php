@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="shortcut icon" href="img/icono_stiven.jpg" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+    <header>
+        <h1>¡Bienvenido a la Página de Inicio!</h1>
+        <nav>
+            <ul>
+                <li><a href="crud_producto/index.html">Productos</a></li>
+                <li><a href="modulo_ventas/index.html">Ventas</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section onclick="redireccionar('crud_producto/index.html')" id="productos">
+            <h1>Productos</h1>
+            <p>Aquí va la solucion de: "Este software debe permitir la creación de
+                productos, la edición de los productos, la eliminación de productos y listar todos los productos
+                registrados en el sistema".</p>
+        </section>
+
+        <section onclick="redireccionar('modulo_ventas/index.html')" id="ventas">
+            <h1>Ventas</h1>
+            <p>Aquí va el contenido de: "un módulo que permita realizar la venta de un producto, el cual recibirá el
+                id del producto como parámetro y la cantidad del producto vendido".</p>
+        </section>
+    </main>
+
+    <footer>
+        <p id="Autor">Stiven Ortega</p>
+    </footer>
+    <script>
+        function redireccionar(url) {
+            window.location.href = url;
+        }
+    </script>
+</body>
+</html>
